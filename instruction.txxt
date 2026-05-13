@@ -1,0 +1,18 @@
+
+steps to run this repo code (open 2 terminal)
+1. -> docker compose up --build  (1st terminal command)
+2. -> docker compose exec backend sh (2nd terminal command)
+3. -> npm run build && npm run migration:auth:run && npm run seed:auth (2nd terminal command)
+4. -> npm run build && npm run migration:mail:run && npm run seed:mail (2nd terminal command)
+5. -> npm run build && npm run migration:main:run && npm run seed:main (2nd terminal command)
+
+
+open terminal
+run 1 step command (wait for clear yellow route to visible)
+
+open one more terminal
+run 2 step command (you will get nested terminal)
+
+then run 3,4,5 step command one by one 
+
+you are ready to use application

@@ -19,7 +19,7 @@ const options: DataSourceOptions = {
         FollowEntity,
         MailBoxEntity
     ],
-    schema:process.env.DB_POSTGRES_MAIL_SCHEMA,
+    schema: process.env.DB_POSTGRES_MAIL_SCHEMA || 'mail',
     synchronize: false,
     migrations: ['dist/module/mail-server/infrastructure/database/migrations/*{.ts,.js}'],
 };

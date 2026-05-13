@@ -23,6 +23,7 @@ export enum RoutingKeyEnum {
 }
 
 export enum QueueEnum {
+    MAIN_USER_QUEUE = 'main.user.queue',
     MAIL_USER_QUEUE = 'mail.user.queue',
     MAIL_POST_CREATED_QUEUE = 'mail.post.created.queue',
     MAIL_FOLLOW_CREATED_QUEUE = 'mail.follow.created.queue',

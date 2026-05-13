@@ -15,7 +15,7 @@ const options: DataSourceOptions = {
     entities: [
         UserEntity,
     ],
-    schema:process.env.DB_POSTGRES_AUTH_SCHEMA,
+    schema: process.env.DB_POSTGRES_AUTH_SCHEMA || 'auth',
     synchronize: false,
     migrations: ['dist/module/auth-server/infrastructure/database/migrations/*{.ts,.js}'],
 };

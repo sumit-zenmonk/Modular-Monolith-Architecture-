@@ -14,6 +14,7 @@ export async function createSchemas() {
 
         await client.query(`CREATE SCHEMA IF NOT EXISTS ${process.env.DB_POSTGRES_AUTH_SCHEMA};`);
         await client.query(`CREATE SCHEMA IF NOT EXISTS ${process.env.DB_POSTGRES_MAIL_SCHEMA};`);
+        await client.query(`CREATE SCHEMA IF NOT EXISTS ${process.env.DB_POSTGRES_MAIN_SCHEMA};`);
 
         await client.end();
     }

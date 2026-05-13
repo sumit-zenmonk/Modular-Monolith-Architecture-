@@ -7,7 +7,7 @@ import { InjectDataSource } from "@nestjs/typeorm";
 @Injectable()
 export class MailBoxRepository extends Repository<MailBoxEntity> {
         constructor(
-            @InjectDataSource('mail')
+            @InjectDataSource(process.env.DB_POSTGRES_MAIL_SCHEMA || 'mail')
             private readonly dataSource: DataSource,
         ) {
             super(MailBoxEntity, dataSource.createEntityManager());

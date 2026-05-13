@@ -5,7 +5,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { authdataSource } from './module/auth-server/infrastructure/database/data-source';
-import { UserModule } from './module/auth-server/feature/user/user.module';
 import { BcryptService } from './common/services/bcrypt.service';
 import { UserRepository } from './module/auth-server/infrastructure/repository/user.repo';
 import { JwtHelperService } from './module/auth-server/infrastructure/services/jwt.service';
@@ -14,6 +13,11 @@ import { AuthenticateMiddleware } from './common/infrastruture/middleware/authen
 import { mailDataSource } from './module/mail-server/infrastructure/database/data-source';
 import { CronModule } from './module/mail-server/infrastructure/cron/cron.module';
 import { MailModule } from './module/mail-server/infrastructure/email/mail.module';
+import * as AuthModule from './module/auth-server/feature/user/user.module';
+import { UserModule } from './module/main-server/feature/user/user.module';
+import { PostModule } from './module/main-server/feature/post/post.module';
+import { FollowModule } from './module/main-server/feature/follow/follow.module';
+import { mainDataSource } from './module/main-server/infrastructure/database/data-source';
 
 @Module({
   imports: [
@@ -29,23 +33,34 @@ import { MailModule } from './module/mail-server/infrastructure/email/mail.modul
     RabbitMQModule,
 
     //Auth Modules
-    UserModule,
     TypeOrmModule.forRoot({
-      name: 'auth',
+      name: process.env.DB_POSTGRES_AUTH_SCHEMA || 'auth',
       ...authdataSource.options,
       retryAttempts: 10,
       retryDelay: 5000
     }),
+    AuthModule.UserModule,
 
     //Mail Modules
     TypeOrmModule.forRoot({
-      name: 'mail',
+      name: process.env.DB_POSTGRES_MAIL_SCHEMA || 'mail',
       ...mailDataSource.options,
       retryAttempts: 10,
       retryDelay: 5000
     }),
     MailModule,
-    CronModule
+    CronModule,
+
+    // Main Modules
+    TypeOrmModule.forRoot({
+      name: process.env.DB_POSTGRES_MAIN_SCHEMA || 'main',
+      ...mainDataSource.options,
+      retryAttempts: 10,
+      retryDelay: 5000
+    }),
+    UserModule,
+    PostModule,
+    FollowModule
   ],
   controllers: [AppController],
   providers: [AppService, BcryptService, UserRepository, JwtHelperService],

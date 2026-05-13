@@ -30,9 +30,9 @@ export class AuthenticateMiddleware implements NestMiddleware {
                 throw new HttpException("account not found", HttpStatus.UNAUTHORIZED);
             }
 
-            req.user = isExistsAndActiveUser
+            req.user = isExistsAndActiveUser[0]
             // valid request and authenticate account 
-
+console.log(req.user);
             next();
         } catch (error) {
             console.error("Middleware Error:", error);

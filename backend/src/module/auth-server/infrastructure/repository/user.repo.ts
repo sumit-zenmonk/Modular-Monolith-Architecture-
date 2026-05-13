@@ -6,7 +6,7 @@ import { InjectDataSource } from "@nestjs/typeorm";
 @Injectable()
 export class UserRepository extends Repository<UserEntity> {
     constructor(
-        @InjectDataSource('auth')
+        @InjectDataSource(process.env.DB_POSTGRES_AUTH_SCHEMA || 'auth')
         private readonly dataSource: DataSource,
     ) {
         super(UserEntity, dataSource.createEntityManager());
