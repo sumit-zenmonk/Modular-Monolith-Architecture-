@@ -18,22 +18,34 @@ export class CreatorPostToFollowerCronService {
     async handleCron() {
         // fetch top 10 pending mail 
         const pendingmails = await this.mailBoxRepo.findTopTenPendingMails();
-        await Promise.all(
-            pendingmails.map(async (mail) => {
-                try {
-                    const mailboxEntry: CreateMailEntryPayload = {
-                        email: mail.email,
-                        body: mail.body as CreatorPostCreatedMailBody,
-                    };
+        if (!pendingmails.length) {
+            return;
+        }
 
-                    await this.emailService.sendCreatorPostNotificationToFollower(mailboxEntry);
+        try {
+            // make entry object perfect
+            const mailboxEntries: CreateMailEntryPayload[] = pendingmails.map((mail) => ({
+                email: mail.email,
+                body: mail.body as CreatorPostCreatedMailBody,
+            }));
+            //send batch entry object to email service
+            await this.emailService.sendBacthEmailCreatorPostNotificationToFollower(mailboxEntries);
+
+            //make every field status send
+            await Promise.all(
+                pendingmails.map(async (mail) => {
                     await this.mailBoxRepo.updateStatus(mail.uuid, MailBoxStatusEnum.SENT,);
-                } catch (error) {
-                    this.logger.error(`Failed to send mail ${mail.uuid}`,);
+                }),
+            );
+        } catch (error) {
+            this.logger.error(`Failed to send batch mail`);
 
+            //make every field status failed
+            await Promise.all(
+                pendingmails.map(async (mail) => {
                     await this.mailBoxRepo.updateStatus(mail.uuid, MailBoxStatusEnum.FAILED,);
-                }
-            }),
-        );
+                }),
+            );
+        }
     }
 }
