@@ -1,0 +1,32 @@
+.container {
+    width: 100%;
+    height: 93%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.container img {
+    border-radius: 50%;
+    border: 4px solid #85d2ff;
+    box-shadow: 2 2 10 rgb(0, 0, 0);
+    margin-bottom: 20px;
+    object-fit: cover;
+}
+
+.container img:hover {
+    transform: translateY(-10px) scale(1.2);
+}
+
+.container p {
+    margin: 6px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.container p:first-of-type {
+    font-weight: 600;
+    font-size: 18px;
+}

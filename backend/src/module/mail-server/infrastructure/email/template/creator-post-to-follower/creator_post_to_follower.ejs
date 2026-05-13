@@ -1,0 +1,28 @@
+<h2>Hello <%= body.receiver_name %>,</h2>
+
+<p>
+    <strong>
+        <%= body.creator.name %>
+    </strong> just published a new post.
+</p>
+
+<div>
+    <h3>
+        <%= body.post.title %>
+    </h3>
+
+    <% if (body.post.excerpt) { %>
+        <p>
+            <%= body.post.excerpt %>
+        </p>
+        <% } %>
+
+            <a>
+                Read Post
+            </a>
+</div>
+
+<p>
+    Thanks,<br />
+    Nice App Team
+</p>
