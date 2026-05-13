@@ -20,7 +20,6 @@ export class EmailService {
     }
 
     async sendCreatorPostNotificationToFollower(data: CreateMailEntryPayload) {
-        console.log(data);
         await this.mailerService.sendMail({
             to: data.email,
             subject: 'New post from creator you follow',
