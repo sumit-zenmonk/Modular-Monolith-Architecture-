@@ -12,6 +12,7 @@ import { RabbitMQModule } from './common/infrastruture/rabbit-mq/rabbit-mq.modul
 import { AuthenticateMiddleware } from './common/infrastruture/middleware/authenticate.middleware';
 import { mailDataSource } from './module/mail-server/infrastructure/database/data-source';
 import { CronModule } from './module/mail-server/infrastructure/cron/cron.module';
+import * as AuthCronModule from './module/auth-server/infrastructure/cron/cron.module';
 import { MailModule } from './module/mail-server/infrastructure/email/mail.module';
 import * as AuthModule from './module/auth-server/feature/user/user.module';
 import { UserModule } from './module/main-server/feature/user/user.module';
@@ -40,6 +41,7 @@ import { mainDataSource } from './module/main-server/infrastructure/database/dat
       retryDelay: 5000
     }),
     AuthModule.UserModule,
+    AuthCronModule.CronModule,
 
     //Mail Modules
     TypeOrmModule.forRoot({

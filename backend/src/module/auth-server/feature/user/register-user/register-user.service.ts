@@ -6,6 +6,7 @@ import { UserRepository } from "src/module/auth-server/infrastructure/repository
 import { BcryptService } from "src/common/services/bcrypt.service";
 import { JwtHelperService } from "src/module/auth-server/infrastructure/services/jwt.service";
 import { ExchangeNameEnum, RoutingKeyEnum } from "src/common/infrastruture/rabbit-mq/type-enum/rabbit-mq.enum";
+import { OutboxRepository } from "src/module/auth-server/infrastructure/repository/outbox.repo";
 
 @Injectable()
 export class RegisterUserService {
@@ -14,6 +15,7 @@ export class RegisterUserService {
         private readonly bcryptService: BcryptService,
         private readonly jwtHelperService: JwtHelperService,
         private readonly rabbitMQService: RabbitMQService,
+        private readonly outboxRepo: OutboxRepository,
     ) { }
 
     async registerUser(req: Request, body: RegisterUserDto) {
@@ -32,11 +34,19 @@ export class RegisterUserService {
         // generate token for accessing resources
         const token = await this.jwtHelperService.generateJwtToken(RegisteredUser);
 
-        await this.rabbitMQService.publishToExchange(
-            ExchangeNameEnum.USER_EXCHANGE,
-            RoutingKeyEnum.USER_REGISTERED,
-            RegisteredUser,
-        );
+        // not publish direct to mq-queue
+        // await this.rabbitMQService.publishToExchange(
+        //     ExchangeNameEnum.USER_EXCHANGE,
+        //     RoutingKeyEnum.USER_REGISTERED,
+        //     RegisteredUser,
+        // );
+
+        // make entry of publish exchange
+        await this.outboxRepo.createOutboxntry({
+            exchange_name: ExchangeNameEnum.USER_EXCHANGE,
+            routing_key: RoutingKeyEnum.USER_REGISTERED,
+            message_payload: RegisteredUser,
+        });
 
         return {
             message: "Registered User",

@@ -4,6 +4,7 @@ import 'dotenv/config';
 
 //Entities
 import { UserEntity } from "src/module/auth-server/domain/user/user.entity";
+import { OutboxEntity } from "../../domain/outbox/outbox.entity";
 
 const options: DataSourceOptions = {
     type: process.env.DB_POSTGRES_TYPE as any,
@@ -13,7 +14,7 @@ const options: DataSourceOptions = {
     password: process.env.DB_POSTGRES_PASSWORD,
     database: process.env.DB_POSTGRES_DATABASE,
     entities: [
-        UserEntity,
+        UserEntity,OutboxEntity
     ],
     schema: process.env.DB_POSTGRES_AUTH_SCHEMA || 'auth',
     synchronize: false,

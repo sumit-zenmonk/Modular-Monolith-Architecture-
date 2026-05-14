@@ -1,0 +1,37 @@
+import { MigrationInterface, QueryRunner, Table } from "typeorm";
+
+export class outboxMigration1778505600001 implements MigrationInterface {
+    name = "outboxMigration1778505600001";
+
+    public async up(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`CREATE TYPE "auth"."outbox_exchange_name_enum" AS ENUM('user.exchange', 'creater.post')`);
+        await queryRunner.query(`CREATE TYPE "auth"."outbox_routing_key_enum" AS ENUM('user.registered', 'creator.post.created', 'follow.created', 'follow.deleted')`);
+        await queryRunner.query(`CREATE TYPE "auth"."outbox_status_enum" AS ENUM('pending', 'published', 'failed')`);
+
+        await queryRunner.createTable(
+            new Table({
+                name: "outbox",
+                columns: [
+                    { name: "uuid", type: "uuid", isPrimary: true, generationStrategy: "uuid", default: "uuid_generate_v4()", },
+                    { name: "id", type: "bigint", isGenerated: true, generationStrategy: "increment", isUnique: true, isNullable: false, },
+                    { name: "exchange_name", type: `"auth"."outbox_exchange_name_enum"`, isNullable: false, },
+                    { name: "routing_key", type: `"auth"."outbox_routing_key_enum"`, isNullable: false, },
+                    { name: "message_payload", type: "jsonb", isNullable: false, },
+                    { name: "header_payload", type: "jsonb", isNullable: true, },
+                    { name: "status", type: `"auth"."outbox_status_enum"`, default: `'pending'`, isNullable: false, },
+                    { name: "created_at", type: "timestamp", default: "now()", },
+                    { name: "updated_at", type: "timestamp", default: "now()", },
+                    { name: "deleted_at", type: "timestamp", isNullable: true, },
+                ],
+            }),
+            true
+        );
+    }
+
+    public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.dropTable("outbox", true);
+        await queryRunner.query(`DROP TYPE IF EXISTS "auth"."outbox_status_enum"`);
+        await queryRunner.query(`DROP TYPE IF EXISTS "auth"."outbox_routing_key_enum"`);
+        await queryRunner.query(`DROP TYPE IF EXISTS "auth"."outbox_exchange_name_enum"`);
+    }
+}

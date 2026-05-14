@@ -5,11 +5,19 @@ import { UserRepository } from "src/module/auth-server/infrastructure/repository
 import { JwtHelperService } from "src/module/auth-server/infrastructure/services/jwt.service";
 import { BcryptService } from "src/common/services/bcrypt.service";
 import { RabbitMQService } from "src/common/infrastruture/rabbit-mq/rabbit-mq.service";
+import { OutboxRepository } from "src/module/auth-server/infrastructure/repository/outbox.repo";
 
 @Module({
     imports: [],
     controllers: [RegisterUserController],
-    providers: [UserRepository, RegisterUserService, JwtHelperService, BcryptService, RabbitMQService],
+    providers: [
+        UserRepository,
+        RegisterUserService,
+        JwtHelperService,
+        BcryptService,
+        RabbitMQService,
+        OutboxRepository
+    ],
     exports: [],
 })
 
