@@ -26,7 +26,10 @@ export class OutboxEntryPublisherCronService {
                     await this.rabbitMQService.publishToExchange(
                         entry.exchange_name,
                         entry.routing_key,
-                        entry.message_payload,
+                        {
+                            outbox_uuid: entry.uuid,
+                            payload: entry.message_payload,
+                        },
                     );
 
                     // make entry success

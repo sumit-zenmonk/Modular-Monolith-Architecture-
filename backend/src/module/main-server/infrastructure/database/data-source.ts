@@ -7,6 +7,7 @@ import { UserEntity } from "../../domain/user/user.entity";
 import { PostEntity } from "../../domain/post/post.entity";
 import { FollowEntity } from "../../domain/follow/follow.entity";
 import { OutboxEntity } from "../../domain/outbox/outbox.entity";
+import { InboxEntity } from "../../domain/inbox/inbox.entity";
 
 const options: DataSourceOptions = {
     type: process.env.DB_POSTGRES_TYPE as any,
@@ -16,7 +17,7 @@ const options: DataSourceOptions = {
     password: process.env.DB_POSTGRES_PASSWORD,
     database: process.env.DB_POSTGRES_DATABASE,
     entities: [
-        UserEntity, PostEntity, FollowEntity, OutboxEntity
+        UserEntity, PostEntity, FollowEntity, OutboxEntity, InboxEntity
     ],
     schema: process.env.DB_POSTGRES_MAIN_SCHEMA || 'main',
     synchronize: false,
