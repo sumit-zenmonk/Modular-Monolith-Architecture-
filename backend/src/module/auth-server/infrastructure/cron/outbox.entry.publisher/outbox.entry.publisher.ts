@@ -3,7 +3,6 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { OutboxRepository } from '../../repository/outbox.repo';
 import { OutboxStatusEnum } from 'src/module/auth-server/domain/outbox/outbox.enum';
 import { RabbitMQService } from 'src/common/infrastruture/rabbit-mq/rabbit-mq.service';
-import { ExchangeNameEnum, RoutingKeyEnum } from 'src/common/infrastruture/rabbit-mq/type-enum/rabbit-mq.enum';
 
 @Injectable()
 export class OutboxEntryPublisherCronService {
@@ -25,8 +24,8 @@ export class OutboxEntryPublisherCronService {
                 try {
                     //push to mq
                     await this.rabbitMQService.publishToExchange(
-                        ExchangeNameEnum.USER_EXCHANGE,
-                        RoutingKeyEnum.USER_REGISTERED,
+                        entry.exchange_name,
+                        entry.routing_key,
                         entry.message_payload,
                     );
 
