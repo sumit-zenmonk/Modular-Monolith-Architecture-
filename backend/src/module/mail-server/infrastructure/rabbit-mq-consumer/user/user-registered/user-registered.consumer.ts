@@ -3,6 +3,7 @@ import { RabbitMQService } from 'src/common/infrastruture/rabbit-mq/rabbit-mq.se
 import { EmailService } from '../../../email/mail.service';
 import { UserRepository } from '../../../repository/user.repo';
 import { ExchangeNameEnum, ExchangeTypeEnum, QueueEnum, RoutingKeyEnum } from 'src/common/infrastruture/rabbit-mq/type-enum/rabbit-mq.enum';
+import { InboxRepository } from '../../../repository/inbox.repo';
 
 @Injectable()
 export class UserRegisteredConsumer implements OnModuleInit {
@@ -12,6 +13,7 @@ export class UserRegisteredConsumer implements OnModuleInit {
         private readonly rabbitMQService: RabbitMQService,
         private readonly emailService: EmailService,
         private readonly userRepo: UserRepository,
+        private readonly inboxRepo: InboxRepository,
     ) { }
 
     async onModuleInit() {
@@ -25,10 +27,23 @@ export class UserRegisteredConsumer implements OnModuleInit {
         await this.rabbitMQService.consumeMessages(
             QueueEnum.MAIL_USER_QUEUE,
             async (data) => {
-                this.logger.log(`Processing registered user: ${data.email} \n ${JSON.stringify(data)}`,);
+                const { outbox_uuid, payload } = data;
+                this.logger.log(`Processing registered user: ${payload.email} \n ${JSON.stringify(payload)}`,);
 
-                await this.userRepo.register(data);
-                await this.emailService.sendUserWelcome(data);
+                const alreadyProcessed = await this.inboxRepo.findByOutboxUuid(outbox_uuid);
+                if (alreadyProcessed) {
+                    this.logger.warn(`Duplicate skipped: ${outbox_uuid}`);
+                    return;
+                }
+
+                const isUserExists = await this.userRepo.findByEmail(payload.email);
+                if (isUserExists.length) {
+                    this.logger.warn(`Duplicate skipped: ${isUserExists[0].email}`);
+                    return;
+                }
+
+                await this.userRepo.register(payload);
+                await this.emailService.sendUserWelcome(payload);
             },
         );
     }

@@ -1,11 +1,12 @@
 //Data-Source imports
 import { DataSource, DataSourceOptions } from "typeorm";
 import 'dotenv/config';
+
+//Entities
 import { UserEntity } from "../../domain/user/user.entity";
 import { FollowEntity } from "../../domain/follow/follow.entity";
 import { MailBoxEntity } from "../../domain/mailbox/mailbox";
-
-//Entities
+import { InboxEntity } from "../../domain/inbox/inbox.entity";
 
 const options: DataSourceOptions = {
     type: process.env.DB_POSTGRES_TYPE as any,
@@ -17,7 +18,8 @@ const options: DataSourceOptions = {
     entities: [
         UserEntity,
         FollowEntity,
-        MailBoxEntity
+        MailBoxEntity,
+        InboxEntity
     ],
     schema: process.env.DB_POSTGRES_MAIL_SCHEMA || 'mail',
     synchronize: false,

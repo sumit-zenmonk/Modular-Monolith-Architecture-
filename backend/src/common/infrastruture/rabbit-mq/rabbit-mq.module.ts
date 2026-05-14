@@ -12,6 +12,7 @@ import * as mainRepo from 'src/module/main-server/infrastructure/repository/user
 import { MailBoxRepository } from 'src/module/mail-server/infrastructure/repository/mailbox.repo';
 import { FollowRepository } from 'src/module/mail-server/infrastructure/repository/follow.repo';
 import { InboxRepository } from 'src/module/main-server/infrastructure/repository/inbox.repo';
+import * as MailRepo from 'src/module/mail-server/infrastructure/repository/inbox.repo';
 
 @Module({
     imports: [MailModule],
@@ -28,6 +29,7 @@ import { InboxRepository } from 'src/module/main-server/infrastructure/repositor
         FollowDeletedConsumer,
         MailBoxRepository,
         InboxRepository,
+        MailRepo.InboxRepository,
     ],
     exports: [RabbitMQService],
 })
