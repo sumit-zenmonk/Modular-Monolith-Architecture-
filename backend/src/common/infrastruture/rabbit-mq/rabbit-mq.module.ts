@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { RabbitMQService } from './rabbit-mq.service';
 import { UserRegisteredConsumer } from '../../../module/mail-server/infrastructure/rabbit-mq-consumer/user/user-registered/user-registered.consumer';
 import * as MainConsumer from '../../../module/main-server/infrastructure/rabbit-mq-consumer/user/user-registered/user-registered.consumer';
@@ -14,6 +14,7 @@ import { FollowRepository } from 'src/module/mail-server/infrastructure/reposito
 import { InboxRepository } from 'src/module/main-server/infrastructure/repository/inbox.repo';
 import * as MailRepo from 'src/module/mail-server/infrastructure/repository/inbox.repo';
 
+@Global()
 @Module({
     imports: [MailModule],
     providers: [

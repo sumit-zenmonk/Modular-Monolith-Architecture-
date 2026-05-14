@@ -20,6 +20,7 @@ import * as MainModule from './module/main-server/feature/user/user.module';
 import { PostModule } from './module/main-server/feature/post/post.module';
 import { FollowModule } from './module/main-server/feature/follow/follow.module';
 import { mainDataSource } from './module/main-server/infrastructure/database/data-source';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { mainDataSource } from './module/main-server/infrastructure/database/dat
       // signOptions: { expiresIn: '60m' },
     }),
     RabbitMQModule,
+    ScheduleModule.forRoot(),
 
     //Auth Modules
     TypeOrmModule.forRoot({
