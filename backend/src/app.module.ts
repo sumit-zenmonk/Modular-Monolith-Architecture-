@@ -11,12 +11,12 @@ import { JwtHelperService } from './module/auth-server/infrastructure/services/j
 import { RabbitMQModule } from './common/infrastruture/rabbit-mq/rabbit-mq.module';
 import { AuthenticateMiddleware } from './common/infrastruture/middleware/authenticate.middleware';
 import { mailDataSource } from './module/mail-server/infrastructure/database/data-source';
-import { CronModule } from './module/mail-server/infrastructure/cron/cron.module';
+import * as MailCronModule from './module/mail-server/infrastructure/cron/cron.module';
 import * as AuthCronModule from './module/auth-server/infrastructure/cron/cron.module';
 import * as MainCronModule from './module/main-server/infrastructure/cron/cron.module';
 import { MailModule } from './module/mail-server/infrastructure/email/mail.module';
 import * as AuthModule from './module/auth-server/feature/user/user.module';
-import { UserModule } from './module/main-server/feature/user/user.module';
+import * as MainModule from './module/main-server/feature/user/user.module';
 import { PostModule } from './module/main-server/feature/post/post.module';
 import { FollowModule } from './module/main-server/feature/follow/follow.module';
 import { mainDataSource } from './module/main-server/infrastructure/database/data-source';
@@ -52,7 +52,7 @@ import { mainDataSource } from './module/main-server/infrastructure/database/dat
       retryDelay: 5000
     }),
     MailModule,
-    CronModule,
+    MailCronModule.CronModule,
 
     // Main Modules
     TypeOrmModule.forRoot({
@@ -61,7 +61,7 @@ import { mainDataSource } from './module/main-server/infrastructure/database/dat
       retryAttempts: 10,
       retryDelay: 5000
     }),
-    UserModule,
+    MainModule.UserModule,
     PostModule,
     FollowModule,
     MainCronModule.CronModule,
