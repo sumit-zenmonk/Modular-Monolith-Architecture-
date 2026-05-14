@@ -13,6 +13,7 @@ import { AuthenticateMiddleware } from './common/infrastruture/middleware/authen
 import { mailDataSource } from './module/mail-server/infrastructure/database/data-source';
 import { CronModule } from './module/mail-server/infrastructure/cron/cron.module';
 import * as AuthCronModule from './module/auth-server/infrastructure/cron/cron.module';
+import * as MainCronModule from './module/main-server/infrastructure/cron/cron.module';
 import { MailModule } from './module/mail-server/infrastructure/email/mail.module';
 import * as AuthModule from './module/auth-server/feature/user/user.module';
 import { UserModule } from './module/main-server/feature/user/user.module';
@@ -62,7 +63,8 @@ import { mainDataSource } from './module/main-server/infrastructure/database/dat
     }),
     UserModule,
     PostModule,
-    FollowModule
+    FollowModule,
+    MainCronModule.CronModule,
   ],
   controllers: [AppController],
   providers: [AppService, BcryptService, UserRepository, JwtHelperService],

@@ -6,13 +6,15 @@ import { RabbitMQService } from "src/common/infrastruture/rabbit-mq/rabbit-mq.se
 import { UserEntity } from "src/module/main-server/domain/user/user.entity";
 import { UserRoleEnum } from "src/module/main-server/domain/user/user.enum";
 import { ExchangeNameEnum, RoutingKeyEnum } from "src/common/infrastruture/rabbit-mq/type-enum/rabbit-mq.enum";
+import { OutboxRepository } from "src/module/main-server/infrastructure/repository/outbox.repo";
 
 @Injectable()
 export class CreateFollowerOfCreatorService {
     constructor(
         private readonly followRepo: FollowRepository,
         private readonly userRepo: UserRepository,
-        private readonly rabbitMQService: RabbitMQService
+        private readonly rabbitMQService: RabbitMQService,
+        private readonly outboxRepo: OutboxRepository
     ) { }
 
     async createFollowerOfCreator(user: UserEntity, body: CreateFollowerOfCreatorDto) {
@@ -33,11 +35,19 @@ export class CreateFollowerOfCreatorService {
 
         const follow = await this.followRepo.createFollowerBond(body);
 
-        await this.rabbitMQService.publishToExchange(
-            ExchangeNameEnum.CREATOR_EXCHANGE,
-            RoutingKeyEnum.FOLLOW_CREATED,
-            follow,
-        );
+        // not publish direct to mq-queue
+        // await this.rabbitMQService.publishToExchange(
+        //     ExchangeNameEnum.CREATOR_EXCHANGE,
+        //     RoutingKeyEnum.FOLLOW_CREATED,
+        //     follow,
+        // );
+
+        // make entry of publish exchange
+        await this.outboxRepo.createOutboxntry({
+            exchange_name: ExchangeNameEnum.CREATOR_EXCHANGE,
+            routing_key: RoutingKeyEnum.FOLLOW_CREATED,
+            message_payload: follow,
+        });
 
         return {
             follow: follow,
