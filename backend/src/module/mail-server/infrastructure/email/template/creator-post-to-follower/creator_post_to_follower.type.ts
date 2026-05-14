@@ -1,5 +1,7 @@
+import { RoutingKeyEnum } from "src/common/infrastruture/rabbit-mq/type-enum/rabbit-mq.enum";
+
 export interface CreatorPostCreatedMailBody {
-    type: 'CREATOR_POST_CREATED';
+    type: RoutingKeyEnum.CREATOR_POST_CREATED;
     receiver_name: string;
     creator: {
         uuid: string;

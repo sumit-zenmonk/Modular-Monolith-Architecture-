@@ -49,7 +49,7 @@ export class CreatorPostCreatedConsumer implements OnModuleInit {
                     const mailbox_entry_detail: CreateMailEntryPayload = {
                         email: follower.follower.email,
                         body: {
-                            type: 'CREATOR_POST_CREATED',
+                            type: RoutingKeyEnum.CREATOR_POST_CREATED,
                             receiver_name: follower.follower.name,
                             creator: {
                                 uuid: payload.user_uuid,

@@ -12,7 +12,7 @@ export enum XMatchHeaderEnum {
 
 export enum ExchangeNameEnum {
     USER_EXCHANGE = 'user.exchange',
-    CREATOR_EXCHANGE = 'creater.post',
+    CREATOR_EXCHANGE = 'creater.exchange',
 }
 
 export enum RoutingKeyEnum {
