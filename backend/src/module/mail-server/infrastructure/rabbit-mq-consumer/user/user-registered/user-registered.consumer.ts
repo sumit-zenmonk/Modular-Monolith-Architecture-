@@ -44,6 +44,7 @@ export class UserRegisteredConsumer implements OnModuleInit {
 
                 await this.userRepo.register(payload);
                 await this.emailService.sendUserWelcome(payload);
+                await this.inboxRepo.createEntry({ outbox_uuid });
             },
         );
     }

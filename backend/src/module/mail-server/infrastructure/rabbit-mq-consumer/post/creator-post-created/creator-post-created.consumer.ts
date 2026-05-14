@@ -5,6 +5,7 @@ import { FollowRepository } from '../../../repository/follow.repo';
 import { MailBoxRepository } from '../../../repository/mailbox.repo';
 import { ExchangeNameEnum, ExchangeTypeEnum, QueueEnum, RoutingKeyEnum } from 'src/common/infrastruture/rabbit-mq/type-enum/rabbit-mq.enum';
 import { CreateMailEntryPayload } from '../../../email/template/creator-post-to-follower/creator_post_to_follower.type';
+import { InboxRepository } from '../../../repository/inbox.repo';
 
 @Injectable()
 export class CreatorPostCreatedConsumer implements OnModuleInit {
@@ -15,6 +16,7 @@ export class CreatorPostCreatedConsumer implements OnModuleInit {
         private readonly emailService: EmailService,
         private readonly followRepo: FollowRepository,
         private readonly mailBoxRepo: MailBoxRepository,
+        private readonly inboxRepo: InboxRepository,
     ) { }
 
     async onModuleInit() {
@@ -28,9 +30,17 @@ export class CreatorPostCreatedConsumer implements OnModuleInit {
         await this.rabbitMQService.consumeMessages(
             QueueEnum.MAIL_POST_CREATED_QUEUE,
             async (data) => {
-                this.logger.log(`Processing creator post creation: ${data.uuid}`);
+                const { outbox_uuid, payload } = data;
 
-                const followers = await this.followRepo.findByFollowingUuid(data.user_uuid);
+                this.logger.log(`Processing creator post creation: ${payload.uuid}`);
+
+                const alreadyProcessed = await this.inboxRepo.findByOutboxUuid(outbox_uuid);
+                if (alreadyProcessed) {
+                    this.logger.warn(`Duplicate skipped: ${outbox_uuid}`);
+                    return;
+                }
+
+                const followers = await this.followRepo.findByFollowingUuid(payload.user_uuid);
                 for (const follower of followers) {
                     // not sending bulk entry
                     //await this.emailService.sendCreatorPostNotification(follower.follower, data);
@@ -42,17 +52,18 @@ export class CreatorPostCreatedConsumer implements OnModuleInit {
                             type: 'CREATOR_POST_CREATED',
                             receiver_name: follower.follower.name,
                             creator: {
-                                uuid: data.user_uuid,
-                                name: data.user_name,
+                                uuid: payload.user_uuid,
+                                name: payload.user_name,
                             },
                             post: {
-                                uuid: data.uuid,
-                                title: data.title,
-                                excerpt: data.content?.slice(0, 150),
+                                uuid: payload.uuid,
+                                title: payload.title,
+                                excerpt: payload.content?.slice(0, 150),
                             },
                         },
                     }
                     await this.mailBoxRepo.createMailntry(mailbox_entry_detail);
+                    await this.inboxRepo.createEntry({ outbox_uuid });
                 }
             },
         );
