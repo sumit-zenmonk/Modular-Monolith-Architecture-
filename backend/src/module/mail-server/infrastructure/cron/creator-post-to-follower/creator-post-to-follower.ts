@@ -14,7 +14,7 @@ export class CreatorPostToFollowerCronService {
     private readonly logger = new Logger(CreatorPostToFollowerCronService.name);
 
     // Runs every minute
-    @Cron(CronExpression.EVERY_MINUTE)
+    @Cron(CronExpression.EVERY_10_SECONDS)
     async handleCron() {
         // fetch top 10 pending mail 
         const pendingmails = await this.mailBoxRepo.findTopTenPendingMails();
