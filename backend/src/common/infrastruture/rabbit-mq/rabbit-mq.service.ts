@@ -5,25 +5,24 @@ import { ExchangeTypeEnum } from "./type-enum/rabbit-mq.enum";
 
 @Injectable()
 export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
-    private channel: Channel;
-    private connection: ChannelModel;
+    private channel?: Channel;
+    private connection?: ChannelModel;
     private readonly logger = new Logger(RabbitMQService.name);
-    private ready: Promise<void>;
+    private isConnecting = false;
+    private isClosing = false;
 
     async onModuleInit() {
-        this.ready = this.connectToRabbitMQ();
-        await this.ready;
+        await this.connectToRabbitMQ();
     }
 
     async onModuleDestroy() {
         await this.closeConnection();
     }
 
-    private async ensureReady() {
-        await this.ready;
-    }
-
     async connectToRabbitMQ() {
+        if (this.isConnecting || this.channel) return;
+
+        this.isConnecting = true;
         try {
             // create connection then i can create multiple channels
             this.connection = await amqp.connect(process.env.RABBIT_MQ_URL ?? "amqp://localhost:5672");
@@ -39,6 +38,10 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
 
             // reconnect if connection closed
             this.connection.on("close", () => {
+                this.connection = undefined;
+                this.channel = undefined;
+                if (this.isClosing) return;
+
                 this.logger.warn("Connection closed, reconnecting...");
                 setTimeout(() => this.connectToRabbitMQ(), 1000);
             });
@@ -46,6 +49,8 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
             this.logger.log("Connected to RabbitMQ and created the channel");
         } catch (error) {
             this.logger.error("Error connecting to RabbitMQ:", error);
+        } finally {
+            this.isConnecting = false;
         }
     }
 
@@ -58,13 +63,15 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
         headers?: PublishHeadersInterface
     ) {
         try {
-            await this.ensureReady();
+            const channel = this.channel;
+            if (!channel) return;
+
             // ensure exchange + queue
-            await this.channel.assertExchange(exchange, type, { durable: true, });
-            await this.channel.assertQueue(queue, { durable: true });
+            await channel.assertExchange(exchange, type, { durable: true, });
+            await channel.assertQueue(queue, { durable: true });
 
             // bind queue to exchange
-            await this.channel.bindQueue(queue, exchange, routingKey, headers);
+            await channel.bindQueue(queue, exchange, routingKey, headers);
         } catch (error) {
             this.logger.error("Error while setting up queue:", error);
         }
@@ -76,8 +83,10 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
         callback: (data: any) => Promise<void>,
     ) {
         try {
-            await this.ensureReady();
-            await this.channel.consume(
+            const channel = this.channel;
+            if (!channel) return;
+
+            await channel.consume(
                 queue,
                 async (msg) => {
                     if (!msg) return;
@@ -85,10 +94,10 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
                     try {
                         const content = JSON.parse(msg.content.toString());
                         await callback(content);
-                        this.channel.ack(msg);
+                        channel.ack(msg);
                     } catch (err) {
                         this.logger.error(`Consumer error`, err);
-                        this.channel.nack(msg, false, false);
+                        channel.nack(msg, false, false);
                     }
                 },
                 { noAck: false },
@@ -107,7 +116,9 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
         headers?: PublishHeadersInterface
     ) {
         try {
-            await this.ensureReady();
+            const channel = this.channel;
+            if (!channel) return;
+
             // ensure exchange exists
             // await this.channel.assertExchange(exchange, type, { durable: true, });
 
@@ -115,7 +126,7 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
             const buffer = Buffer.from(JSON.stringify(message));
 
             // publish message
-            this.channel.publish(exchange, routingKey, buffer, {
+            channel.publish(exchange, routingKey, buffer, {
                 persistent: true,
                 headers: headers
             });
@@ -128,6 +139,8 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
 
     async closeConnection() {
         try {
+            this.isClosing = true;
+
             // close channel + connection
             await this.channel?.close();
             await this.connection?.close();
