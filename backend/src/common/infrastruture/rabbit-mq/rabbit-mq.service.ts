@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from "@nestjs/common";
 import amqp, { Channel, ChannelModel } from "amqplib";
 import { ExchangeType, PublishHeadersInterface } from "./type-enum/rabbit-mq.type";
-import { ExchangeTypeEnum } from "./type-enum/rabbit-mq.enum";
+import { ExchangeNameEnum, ExchangeTypeEnum, QueueEnum, RetryMechanismHeaderEnum, RoutingKeyEnum } from "./type-enum/rabbit-mq.enum";
 
 @Injectable()
 export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
@@ -27,9 +27,10 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
             // create connection then i can create multiple channels
             this.connection = await amqp.connect(process.env.RABBIT_MQ_URL ?? "amqp://localhost:5672");
             this.channel = await this.connection.createChannel();
+            await this.setupInitialCreation();
 
             // fair dispatch
-            await this.channel.prefetch(1);
+            await this.channel.prefetch(5);
 
             // checking channel connection
             this.channel.on('error', (err: any) => {
@@ -54,6 +55,51 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
         }
     }
 
+    private async setupInitialCreation() {
+        const channel = this.channel;
+        if (!channel) return;
+
+        // user registered queue
+        await this.setupExchangeQueueAndBind(
+            QueueEnum.MAIN_USER_QUEUE,
+            ExchangeNameEnum.USER_EXCHANGE,
+            RoutingKeyEnum.USER_REGISTERED,
+            ExchangeTypeEnum.TOPIC,
+        );
+
+        // user registered mail queue
+        await this.setupExchangeQueueAndBind(
+            QueueEnum.MAIL_USER_QUEUE,
+            ExchangeNameEnum.USER_EXCHANGE,
+            RoutingKeyEnum.USER_REGISTERED,
+            ExchangeTypeEnum.TOPIC,
+        );
+
+        // user follow created queue
+        await this.setupExchangeQueueAndBind(
+            QueueEnum.MAIL_FOLLOW_CREATED_QUEUE,
+            ExchangeNameEnum.CREATOR_EXCHANGE,
+            RoutingKeyEnum.FOLLOW_CREATED,
+            ExchangeTypeEnum.TOPIC,
+        );
+
+        // user follow deleted queue
+        await this.setupExchangeQueueAndBind(
+            QueueEnum.MAIL_FOLLOW_DELETED_QUEUE,
+            ExchangeNameEnum.CREATOR_EXCHANGE,
+            RoutingKeyEnum.FOLLOW_DELETED,
+            ExchangeTypeEnum.TOPIC,
+        );
+
+        // creater post created queue 
+        await this.setupExchangeQueueAndBind(
+            QueueEnum.MAIL_POST_CREATED_QUEUE,
+            ExchangeNameEnum.CREATOR_EXCHANGE,
+            RoutingKeyEnum.CREATOR_POST_CREATED,
+            ExchangeTypeEnum.TOPIC,
+        );
+    }
+
     // inset exchange + inset queue -> bind both
     async setupExchangeQueueAndBind(
         queue: string,
@@ -68,7 +114,15 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
 
             // ensure exchange + queue
             await channel.assertExchange(exchange, type, { durable: true, });
-            await channel.assertQueue(queue, { durable: true });
+            await channel.assertQueue(
+                queue,
+                {
+                    durable: true,
+                    deadLetterExchange: "",
+                    deadLetterRoutingKey: `${queue}.dlq`
+                }
+            );
+            await channel.assertQueue(`${queue}.dlq`, { durable: true });
 
             // bind queue to exchange
             await channel.bindQueue(queue, exchange, routingKey, headers);
@@ -83,6 +137,11 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
         callback: (data: any) => Promise<void>,
     ) {
         try {
+            while (!this.channel) {
+                this.logger.warn('Waiting for RabbitMQ channel...');
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+
             const channel = this.channel;
             if (!channel) return;
 
@@ -97,7 +156,51 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
                         channel.ack(msg);
                     } catch (err) {
                         this.logger.error(`Consumer error`, err);
-                        channel.nack(msg, false, false);
+
+                        const maxTries = Number(process.env.RABBIT_MQ_MAX_TRY) || 5;
+                        const maxRequeues = Number(process.env.RABBIT_MQ_MAX_REQUEUE_TRY) || 3;
+                        const requeueTry = (msg.properties.headers?.[RetryMechanismHeaderEnum.XREQUEUETRY] || 0) as number;
+
+                        // Chance 1: if working locallt  inside a processing try chance
+                        for (let attempt = 1; attempt <= maxTries; attempt++) {
+                            try {
+                                const content = JSON.parse(msg.content.toString());
+                                this.logger.warn(`Retry processing attempt ${attempt}/${maxTries}`,);
+
+                                await callback(content);
+                                channel.ack(msg);
+                                return;
+                            } catch (error) {
+                                if (attempt === maxTries) {
+                                    this.logger.error(`Local retry failed after ${maxTries} attempts`,);
+                                }
+                            }
+                        }
+
+                        // Chance 2:  if working inside a requeue try chance
+                        if (requeueTry + 1 < maxRequeues) {
+                            this.logger.warn(`Requeue cycle ${requeueTry + 1}/${maxRequeues}`,);
+
+                            channel.sendToQueue(
+                                queue,
+                                msg.content,
+                                {
+                                    persistent: true,
+                                    headers: {
+                                        ...msg.properties.headers,
+                                        [RetryMechanismHeaderEnum.XREQUEUETRY]: requeueTry + 1,
+                                    },
+                                },
+                            );
+
+                            channel.ack(msg);
+                            // channel.nack(msg, false, true); // requeue automatically
+                            return;
+                        }
+
+                        // Chance 3: if exhausted all chance of max-try and max-requeue-try
+                        this.logger.error(`Message failed after ${maxRequeues} requeues × ${maxTries} tries`,);
+                        channel.nack(msg, false, false); // reject and put in dlq if exists
                     }
                 },
                 { noAck: false },
@@ -128,7 +231,10 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
             // publish message
             channel.publish(exchange, routingKey, buffer, {
                 persistent: true,
-                headers: headers
+                headers: {
+                    ...headers,
+                    [RetryMechanismHeaderEnum.XREQUEUETRY]: 0,
+                },
             });
 
             this.logger.log(`Sent => exchange = ${exchange} | key = ${routingKey}`);

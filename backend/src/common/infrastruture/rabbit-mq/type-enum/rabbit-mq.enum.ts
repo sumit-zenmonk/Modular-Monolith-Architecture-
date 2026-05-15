@@ -31,6 +31,5 @@ export enum QueueEnum {
 }
 
 export enum RetryMechanismHeaderEnum{
-    XPROCESSINGTRY='x-processing-try',
     XREQUEUETRY='x-requeue-try'
 }
