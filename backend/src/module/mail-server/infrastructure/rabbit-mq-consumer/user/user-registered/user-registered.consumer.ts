@@ -17,13 +17,6 @@ export class UserRegisteredConsumer implements OnModuleInit {
     ) { }
 
     async onModuleInit() {
-        await this.rabbitMQService.setupExchangeQueueAndBind(
-            QueueEnum.MAIL_USER_QUEUE,
-            ExchangeNameEnum.USER_EXCHANGE,
-            RoutingKeyEnum.USER_REGISTERED,
-            ExchangeTypeEnum.TOPIC,
-        );
-
         await this.rabbitMQService.consumeMessages(
             QueueEnum.MAIL_USER_QUEUE,
             async (data) => {

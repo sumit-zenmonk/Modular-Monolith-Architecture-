@@ -20,13 +20,6 @@ export class CreatorPostCreatedConsumer implements OnModuleInit {
     ) { }
 
     async onModuleInit() {
-        await this.rabbitMQService.setupExchangeQueueAndBind(
-            QueueEnum.MAIL_POST_CREATED_QUEUE,
-            ExchangeNameEnum.CREATOR_EXCHANGE,
-            RoutingKeyEnum.CREATOR_POST_CREATED,
-            ExchangeTypeEnum.TOPIC,
-        );
-
         await this.rabbitMQService.consumeMessages(
             QueueEnum.MAIL_POST_CREATED_QUEUE,
             async (data) => {

@@ -15,13 +15,6 @@ export class FollowDeletedConsumer implements OnModuleInit {
     ) { }
 
     async onModuleInit() {
-        await this.rabbitMQService.setupExchangeQueueAndBind(
-            QueueEnum.MAIL_FOLLOW_DELETED_QUEUE,
-            ExchangeNameEnum.CREATOR_EXCHANGE,
-            RoutingKeyEnum.FOLLOW_DELETED,
-            ExchangeTypeEnum.TOPIC,
-        );
-
         await this.rabbitMQService.consumeMessages(
             QueueEnum.MAIL_FOLLOW_DELETED_QUEUE,
             async (data) => {

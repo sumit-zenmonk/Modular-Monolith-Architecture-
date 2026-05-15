@@ -15,13 +15,6 @@ export class FollowCreatedConsumer implements OnModuleInit {
     ) { }
 
     async onModuleInit() {
-        await this.rabbitMQService.setupExchangeQueueAndBind(
-            QueueEnum.MAIL_FOLLOW_CREATED_QUEUE,
-            ExchangeNameEnum.CREATOR_EXCHANGE,
-            RoutingKeyEnum.FOLLOW_CREATED,
-            ExchangeTypeEnum.TOPIC,
-        );
-
         await this.rabbitMQService.consumeMessages(
             QueueEnum.MAIL_FOLLOW_CREATED_QUEUE,
             async (data) => {
