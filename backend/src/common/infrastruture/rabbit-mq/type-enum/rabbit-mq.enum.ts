@@ -29,3 +29,8 @@ export enum QueueEnum {
     MAIL_FOLLOW_CREATED_QUEUE = 'mail.follow.created.queue',
     MAIL_FOLLOW_DELETED_QUEUE = 'mail.follow.deleted.queue',
 }
+
+export enum RetryMechanismHeaderEnum{
+    XPROCESSINGTRY='x-processing-try',
+    XREQUEUETRY='x-requeue-try'
+}
