@@ -29,7 +29,7 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
             this.channel = await this.connection.createChannel();
             await this.setupInitialCreation();
 
-            // fair dispatch
+            // fair dispatch means at one time a channel can hold 5 unacknowledged msg with 6th will pass on to another channel
             await this.channel.prefetch(5);
 
             // checking channel connection
@@ -100,7 +100,7 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
         );
     }
 
-    // inset exchange + inset queue -> bind both
+    // insert exchange + insert queue -> bind both
     async setupExchangeQueueAndBind(
         queue: string,
         exchange: string,
@@ -161,7 +161,7 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
                         const maxRequeues = Number(process.env.RABBIT_MQ_MAX_REQUEUE_TRY) || 3;
                         const requeueTry = (msg.properties.headers?.[RetryMechanismHeaderEnum.XREQUEUETRY] || 0) as number;
 
-                        // Chance 1: if working locallt  inside a processing try chance
+                        // Chance 1: if working locally inside a processing try chance
                         for (let attempt = 1; attempt <= maxTries; attempt++) {
                             try {
                                 const content = JSON.parse(msg.content.toString());
@@ -177,7 +177,7 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
                             }
                         }
 
-                        // Chance 2:  if working inside a requeue try chance
+                        // Chance 2: if working inside a requeue try chance
                         if (requeueTry + 1 < maxRequeues) {
                             this.logger.warn(`Requeue cycle ${requeueTry + 1}/${maxRequeues}`,);
 

@@ -2,7 +2,6 @@ import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedCol
 import { ExchangeNameEnum, RoutingKeyEnum } from "src/common/infrastruture/rabbit-mq/type-enum/rabbit-mq.enum";
 import { OutboxStatusEnum } from "./outbox.enum";
 
-
 @Entity("outbox")
 export class OutboxEntity {
     @PrimaryGeneratedColumn("uuid")

@@ -21,7 +21,6 @@ export class LoginUserService {
         }
 
         const isValid = await this.bcryptService.verifyPassword(body.password, isUserExists[0].password);
-
         if (!isValid) {
             throw new BadRequestException('Password not matched');
         }
