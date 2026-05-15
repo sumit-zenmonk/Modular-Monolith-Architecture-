@@ -6,12 +6,12 @@ import { CreateMailEntryPayload, CreatorPostCreatedMailBody } from '../../email/
 import { MailBoxStatusEnum } from 'src/module/mail-server/domain/mailbox/mailbox.enum';
 
 @Injectable()
-export class CreatorPostToFollowerCronService {
+export class PostCreatedFollowerNotifierCronService {
     constructor(
         private readonly mailBoxRepo: MailBoxRepository,
         private readonly emailService: EmailService,
     ) { }
-    private readonly logger = new Logger(CreatorPostToFollowerCronService.name);
+    private readonly logger = new Logger(PostCreatedFollowerNotifierCronService.name);
 
     // Runs every minute
     @Cron(CronExpression.EVERY_10_SECONDS)

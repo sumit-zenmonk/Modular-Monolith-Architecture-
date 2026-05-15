@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { MailModule } from '../email/mail.module';
-import { CreatorPostToFollowerCronService } from './creator-post-to-follower/creator-post-to-follower';
+import { PostCreatedFollowerNotifierCronService } from './post-created-email.publisher/post-created-email.publisher';
 import { MailBoxRepository } from '../repository/mailbox.repo';
 
 @Global()
@@ -9,9 +9,9 @@ import { MailBoxRepository } from '../repository/mailbox.repo';
         MailModule,
     ],
     providers: [
-        CreatorPostToFollowerCronService,
+        PostCreatedFollowerNotifierCronService,
         MailBoxRepository,
     ],
-    exports: [CreatorPostToFollowerCronService],
+    exports: [],
 })
 export class CronModule { }
