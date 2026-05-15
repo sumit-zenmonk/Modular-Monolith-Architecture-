@@ -56,8 +56,10 @@ export class CreatorPostCreatedConsumer implements OnModuleInit {
                         },
                     }
                     await this.mailBoxRepo.createMailntry(mailbox_entry_detail);
-                    await this.inboxRepo.createEntry({ outbox_uuid });
                 }
+
+                // only 1 entry in inbox not as many follower email sent
+                await this.inboxRepo.createEntry({ outbox_uuid });
             },
         );
     }
