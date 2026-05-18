@@ -27,6 +27,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     // common
     ConfigModule.forRoot({
       isGlobal: true,
+      cache: true
     }),
     JwtModule.register({
       global: true,
